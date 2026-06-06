@@ -1,5 +1,6 @@
 package com.algaworks.algasensors.device.management.api.controller;
 
+import com.algaworks.algasensors.device.management.api.client.SensorMonitoringClient;
 import com.algaworks.algasensors.device.management.api.model.SensorInput;
 import com.algaworks.algasensors.device.management.api.model.SensorOutput;
 import com.algaworks.algasensors.device.management.common.IdGenerator;
@@ -13,7 +14,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 
@@ -23,6 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class SensorController {
 
     private final SensorRepository sensorRepository;
+    private final SensorMonitoringClient sensorMonitoringClient;
 
     @GetMapping
     public ResponseEntity<Page<SensorOutput>> search(@PageableDefault Pageable pageable) {
@@ -51,9 +60,7 @@ public class SensorController {
         sensor = sensorRepository.saveAndFlush(sensor);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(
-                        convertToModel(sensor)
-                );
+                .body(convertToModel(sensor));
     }
 
     @PutMapping("{sensorId}")
@@ -77,7 +84,10 @@ public class SensorController {
 
     @DeleteMapping("{sensorId}")
     public ResponseEntity<Void> delete(@PathVariable TSID sensorId) {
-        sensorRepository.deleteById(new SensorId(sensorId));
+        Sensor sensor = sensorRepository.findById(new SensorId(sensorId))
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        sensorRepository.delete(sensor);
+        sensorMonitoringClient.disableMonitoring(sensorId);
         return ResponseEntity.noContent().build();
     }
 
@@ -88,6 +98,7 @@ public class SensorController {
 
         sensor.setEnabled(true);
         sensorRepository.save(sensor);
+        sensorMonitoringClient.enableMonitoring(sensorId);
         return ResponseEntity.noContent().build();
     }
 
@@ -97,7 +108,8 @@ public class SensorController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         sensor.setEnabled(false);
-        sensorRepository.saveAndFlush(sensor);
+        sensorRepository.save(sensor);
+        sensorMonitoringClient.disableMonitoring(sensorId);
         return ResponseEntity.noContent().build();
     }
 
@@ -112,4 +124,5 @@ public class SensorController {
                 sensor.getEnabled()
         );
     }
+
 }
