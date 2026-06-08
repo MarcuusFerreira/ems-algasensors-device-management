@@ -1,5 +1,6 @@
 package com.algaworks.algasensors.device.management.api.client.impl;
 
+import com.algaworks.algasensors.device.management.api.client.RestClientFactory;
 import com.algaworks.algasensors.device.management.api.client.SensorMonitoringClient;
 import io.hypersistence.tsid.TSID;
 import org.springframework.stereotype.Component;
@@ -10,10 +11,8 @@ public class SensorMonitoringClientImpl implements SensorMonitoringClient {
 
     private final RestClient restClient;
 
-    public SensorMonitoringClientImpl(RestClient.Builder builder) {
-        this.restClient = builder
-                .baseUrl("http://localhost:8082")
-                .build();
+    public SensorMonitoringClientImpl(RestClientFactory factory) {
+        this.restClient = factory.temperatureMonitoringRestClient();
     }
 
     @Override
