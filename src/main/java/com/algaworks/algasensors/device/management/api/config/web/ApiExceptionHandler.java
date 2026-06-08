@@ -33,7 +33,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(SensorMonitoringClientBadGatewayException.class)
     public ProblemDetail handle(SensorMonitoringClientBadGatewayException e) {
         var detail = ProblemDetail.forStatus(HttpStatus.BAD_GATEWAY);
-        detail.setTitle("Bad timeout");
+        detail.setTitle("Bad gateway");
         detail.setDetail(e.getMessage());
         detail.setType(URI.create("/errors/bad-gateway"));
         return detail;

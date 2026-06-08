@@ -1,6 +1,7 @@
 package com.algaworks.algasensors.device.management.api.controller;
 
 import com.algaworks.algasensors.device.management.api.client.SensorMonitoringClient;
+import com.algaworks.algasensors.device.management.api.model.SensorDetailOutput;
 import com.algaworks.algasensors.device.management.api.model.SensorInput;
 import com.algaworks.algasensors.device.management.api.model.SensorOutput;
 import com.algaworks.algasensors.device.management.common.IdGenerator;
@@ -44,6 +45,15 @@ public class SensorController {
         Sensor sensor = sensorRepository.findById(new SensorId(sensorId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         return ResponseEntity.ok(convertToModel(sensor));
+    }
+
+    @GetMapping("{sensorId}/detail")
+    public ResponseEntity<SensorDetailOutput> getOneWithDetails(@PathVariable TSID sensorId) {
+        Sensor sensor = sensorRepository.findById(new SensorId(sensorId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        var monitoringOutput = sensorMonitoringClient.getDetail(sensorId);
+        var sensorOutput = convertToModel(sensor);
+        return ResponseEntity.ok(new SensorDetailOutput(sensorOutput, monitoringOutput));
     }
 
     @PostMapping
